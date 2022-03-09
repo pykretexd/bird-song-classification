@@ -6,9 +6,9 @@ import os
 from scipy.io.wavfile import read, write
 import matplotlib.pyplot as plt
 
-wav_path = "C:/Users/elev/Documents/GitHub/CNN-audio-classification/audio/wav/"
+wav_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'wav'))
 
-csv = pd.read_csv("C:/Users/elev/Documents/GitHub/CNN-audio-classification/audio/metadata.csv")
+csv = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'metadata.csv')))
 
 i = 0
 for filename in os.listdir(wav_path):
@@ -17,7 +17,7 @@ for filename in os.listdir(wav_path):
     try:
         y, sr = librosa.load(wav_path + str(audio_file))
     except FileNotFoundError:
-        print("Audio file not found. Continuing to next file.")
+        print("File not found. Continuing.")
         i += 1
         continue
 
@@ -26,8 +26,8 @@ for filename in os.listdir(wav_path):
 
     mel_img = librosa.display.specshow(mel_spectrogram)
     plt.tight_layout()
-    plt.savefig("C:/Users/elev/Documents/GitHub/CNN-audio-classification/images/mel/{}".format(csv.Recording_ID[i]), dpi=200)
+    plt.savefig("CNN-audio-classification/images/mel/{}".format(csv.Recording_ID[i]))
 
-    print("Audio file converted to image.")
+    print("Conversion success.")
     del y, sr, s, mel_spectrogram, mel_img
     i += 1
