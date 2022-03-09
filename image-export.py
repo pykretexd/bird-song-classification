@@ -20,7 +20,7 @@ while i < 5:
     mel_spectrogram = librosa.power_to_db(s, ref=np.max)
     mel_img = librosa.display.specshow(mel_spectrogram)
     plt.tight_layout()
-    plt.savefig("images/mel/mel-spectogram-{}".format(df.recording_id[sample_num], dpi=100))
+    plt.savefig("images/{}".format(df.recording_id[sample_num], dpi=100))
 
     print("Image exported.")
     i += 1
