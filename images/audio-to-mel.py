@@ -13,7 +13,8 @@ csv = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..',
 i = 0
 for filename in os.listdir(wav_path):
     audio_file = str(csv.Genus[i]) + str("-") + str(csv.Specific_epithet[i]) + str("-") + str(csv.Recording_ID[i]) + str('.wav')
-    
+    output = "images/mel/{0}/{1}.png".format(csv.English_name[i], csv.Recording_ID[i])
+
     try:
         y, sr = librosa.load(wav_path + "\\" + audio_file)
     except FileNotFoundError:
@@ -26,8 +27,13 @@ for filename in os.listdir(wav_path):
 
     mel_img = librosa.display.specshow(mel_spectrogram)
     plt.tight_layout()
-    plt.savefig("images/mel/{}".format(csv.Recording_ID[i]))
+    try:
+        plt.savefig(output)
+    except FileNotFoundError:
+        print("Creating {}".format(output))
+        os.makedirs(output)
+        plt.savefig(output)
 
-    print("Conversion success.")
+    print("Conversion of {} successful.".format(output))
     del y, sr, mel_s, mel_spectrogram, mel_img
     i += 1
