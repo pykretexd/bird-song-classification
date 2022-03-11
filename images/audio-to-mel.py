@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 wav_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'wav'))
 df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'metadata.csv')))
 
-for i in os.listdir(wav_path):
+for i, path in enumerate(os.listdir(wav_path)):
     audio_file = '{0}-{1}-{2}.wav'.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i])
-    output = "images/mel/{0}/{1}-{2}.png".format(df.English_name[i], df.Recording_ID[i], df.Recording_ID[i])
+    output = "images/mel/{0}/{1}.png".format(df.English_name[i], df.Recording_ID[i])
 
     try:
         y, sr = librosa.load(wav_path + "\\" + audio_file)
@@ -22,7 +22,7 @@ for i in os.listdir(wav_path):
             pass
 
     except FileNotFoundError:
-        print("{} not found. Continuing.".format(output))
+        print("{} not found. Continuing.".format(audio_file))
         continue
 
     mel_s = librosa.feature.melspectrogram(y, sr)
