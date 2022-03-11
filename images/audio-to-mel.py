@@ -6,6 +6,9 @@ import os
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+# Issue with creating a new folder.
+# Program stops because it lacks permission and needs to be restarted.
+
 wav_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'wav'))
 ogg_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'ogg'))
 df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'metadata.csv')))
@@ -27,16 +30,15 @@ else:
 for i, path in tqdm(enumerate(os.listdir(file_path))):
     target = '{0}/{1}'.format(file_path, audio_file.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i])) 
     output = 'images/mel/{0}/{1}.png'.format(df.English_name[i], df.Recording_ID[i])
+    if os.path.exists(output):
+        continue
     try:
-        y = librosa.load(target)
-        if os.path.exists(output):
-            print("exists")
-            continue
+        y, sr = librosa.load(target)
     except FileNotFoundError:
         print("not found", target, output)
         continue
 
-    mel_s = librosa.feature.melspectrogram(y)
+    mel_s = librosa.feature.melspectrogram(y, sr)
     mel_spectrogram = librosa.power_to_db(mel_s, ref=np.max)
     mel_img = librosa.display.specshow(mel_spectrogram)
 
@@ -46,9 +48,7 @@ for i, path in tqdm(enumerate(os.listdir(file_path))):
     except FileNotFoundError:
         os.makedirs(output)
         plt.savefig(output)
-        print("not found")
     
-    print("saved")
-    del y, mel_s, mel_spectrogram, mel_img
+    del y, sr, mel_s, mel_spectrogram, mel_img
 
 print('.{} to Mel-Spectrogram conversion completed.'.format(ogg_or_wav))
