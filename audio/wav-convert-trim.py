@@ -3,36 +3,43 @@ import os
 import pandas as pd
 
 # Convert
-path = "audio/mp3"
-os.chdir(path)
-mp3_files = os.listdir()
+mp3_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'mp3'))
+wav_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'wav'))
 
-for file in mp3_files:
-    name, ext = os.path.splitext(file)
+# Export
+for filename in os.listdir(mp3_path):
+    name, ext = os.path.splitext(filename)
     if ext == ".mp3":
-       mp3 = AudioSegment.from_mp3(file)
-       mp3.export("audio/wav/{0}.wav".format(name), format="wav")
+       mp3 = AudioSegment.from_mp3(mp3_path + "\\" + filename)
+       mp3.export("{0}/{1}.wav".format(wav_path, name), format="wav")
+       print("{0}/{1}.wav created.".format(wav_path, name))
+    else:
+        print(name, ext)
+
+print("Finished mp3 -> wav conversion.")
 
 # Trim
-wav_path = "audio/wav/"
 csv = pd.read_csv("audio/metadata.csv")
 
-start_time = 0
-end_time = 30000
+start_time = 0 # 0 sec
+end_time = 30000 # 30 sec
 
-i = 0
-for filename in os.listdir(wav_path):
+# Export
+for filename, path in enumerate(os.listdir(wav_path)):
     wav_file = "{0}-{1}-{2}.wav".format(csv.Genus[filename], csv.Specific_epithet[filename], csv.Recording_ID[filename])
-
+    audio = "{0}/{1}".format(wav_path, wav_file)
     try:
-        audio = AudioSegment.from_wav(wav_path + wav_file)
+        audio = AudioSegment.from_wav(audio)
     except FileNotFoundError:
-        print("Audio file not found. Continuing to next file.")
-        i += 1
+        print("{} not found for trimming. Continuing to next file.".format(audio))
         continue
 
-    extract = audio[start_time:end_time]
+    if audio.duration_seconds > 30:
+        try:
+            audio[start_time:end_time].export(audio, format="wav")
+        except AttributeError:
+            continue
+    else:
+        print("{} already trimmed. Continuing.".format(wav_path + "/" + wav_file))
 
-    extract.export(wav_path + wav_file, format="wav")
-
-    i += 1
+print("Finished trimming.")
