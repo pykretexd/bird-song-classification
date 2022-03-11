@@ -45,6 +45,6 @@ for i, path in tqdm(enumerate(os.listdir(file_path))):
         os.makedirs(output)
         plt.savefig(output)
         
-    del y, sr, mel_s, mel_spectrogram, mel_img
+    del y, mel_s, mel_spectrogram, mel_img
 
 print('.{} to Mel-Spectrogram conversion completed.'.format(ogg_or_wav))
