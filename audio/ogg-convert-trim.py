@@ -13,7 +13,7 @@ print("Beginning conversion of .mp3 to .ogg:")
 
 for filename in tqdm(os.listdir(mp3_path)):
     name, ext = os.path.splitext(filename)
-    if ext == '.mp3' and os.path.exists(filename) == False:
+    if ext == '.mp3' and not os.path.exists(filename):
        mp3 = AudioSegment.from_mp3(mp3_path + '\\' + filename)
        mp3[start_time:end_time].export('{0}/{1}.ogg'.format(ogg_path, name), format='ogg')
 
