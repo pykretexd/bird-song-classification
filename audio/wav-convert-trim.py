@@ -22,7 +22,7 @@ end_time = 30000
 
 i = 0
 for filename in os.listdir(wav_path):
-    wav_file = str(csv.Genus[i]) + str("-") + str(csv.Specific_epithet[i]) + str("-") + str(csv.Recording_ID[i]) + str('.wav')
+    wav_file = "{0}-{1}-{2}.wav".format(csv.Genus[filename], csv.Specific_epithet[filename], csv.Recording_ID[filename])
 
     try:
         audio = AudioSegment.from_wav(wav_path + wav_file)
