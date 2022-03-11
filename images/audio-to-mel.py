@@ -11,7 +11,7 @@ df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 
 
 for i in os.listdir(wav_path):
     audio_file = '{0}-{1}-{2}.wav'.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i])
-    output = "images/mel/{0}/{1}.png".format(df.English_name[i], df.Recording_ID[i])
+    output = "images/mel/{0}/{1}-{2}.png".format(df.English_name[i], df.Recording_ID[i], df.Recording_ID[i])
 
     try:
         y, sr = librosa.load(wav_path + "\\" + audio_file)
