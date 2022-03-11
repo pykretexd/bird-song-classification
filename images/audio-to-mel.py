@@ -30,8 +30,10 @@ for i, path in tqdm(enumerate(os.listdir(file_path))):
     try:
         y = librosa.load(target)
         if os.path.exists(output):
+            print("exists")
             continue
     except FileNotFoundError:
+        print("not found", target, output)
         continue
 
     mel_s = librosa.feature.melspectrogram(y)
@@ -44,7 +46,9 @@ for i, path in tqdm(enumerate(os.listdir(file_path))):
     except FileNotFoundError:
         os.makedirs(output)
         plt.savefig(output)
-        
+        print("not found")
+    
+    print("saved")
     del y, mel_s, mel_spectrogram, mel_img
 
 print('.{} to Mel-Spectrogram conversion completed.'.format(ogg_or_wav))
