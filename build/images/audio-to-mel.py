@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 wav_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'wav'))
 ogg_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'ogg'))
+mel_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'mel'))
 df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'metadata.csv')))
 
 ogg_or_wav = input('Proceed with .ogg or .wav? (Enter "ogg" or "wav"): ')
@@ -29,7 +30,7 @@ else:
 
 for i, path in tqdm(enumerate(os.listdir(file_path))):
     target = '{0}/{1}'.format(file_path, audio_file.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i])) 
-    output = 'images/mel/{0}/{1}.png'.format(df.English_name[i], df.Recording_ID[i])
+    output = '{0}/{1}/{2}.png'.format(mel_path, df.English_name[i], df.Recording_ID[i])
     if os.path.exists(output):
         continue
     try:
@@ -45,6 +46,9 @@ for i, path in tqdm(enumerate(os.listdir(file_path))):
     plt.tight_layout()
     try:
         plt.savefig(output)
+    except PermissionError:
+        plt.savefig(output)
+        continue
     except FileNotFoundError:
         os.makedirs(output)
         plt.savefig(output)
