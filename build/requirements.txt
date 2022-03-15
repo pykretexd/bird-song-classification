@@ -1,0 +1,7 @@
+pydub
+pandas
+librosa
+tqdm
+matplotlib
+numpy
+tensorflow
