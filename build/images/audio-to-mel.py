@@ -6,37 +6,33 @@ import os
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-# Issue with creating a new folder.
-# Program stops because it lacks permission and needs to be restarted.
-
-wav_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'wav'))
-ogg_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'ogg'))
 mel_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'mel'))
 df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'metadata.csv')))
 
-ogg_or_wav = input('Proceed with .ogg or .wav? (Enter "ogg" or "wav"): ')
-print('.{} selected.'.format(ogg_or_wav))
+audio_format = input('Specify the desired AUDIO format: ')
+if audio_format == 'mp3' and os.path.exists(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'new_mp3'))):
+    mp3_check = input('Do you want to use the modified mp3 files in "audio/new_mp3"? (y/n): ')
+audio_format = audio_format.lower()
+image_format = input('Specify the desired IMAGE format (eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff): ')
+image_format = image_format.lower()
 
-if ogg_or_wav == 'ogg':
-    file_path = ogg_path
-    audio_file = '{0}-{1}-{2}.ogg'
-
-elif ogg_or_wav == 'wav':
-    file_path = wav_path
-    audio_file = '{0}-{1}-{2}.wav'
-
+if mp3_check == 'y':
+    path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'new_mp3'))
 else:
-    print('Unknown input.')
+    path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', '{}'.format(audio_format)))
 
-for i, path in tqdm(enumerate(os.listdir(file_path))):
-    target = '{0}/{1}'.format(file_path, audio_file.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i])) 
-    output = '{0}/{1}/{2}.png'.format(mel_path, df.English_name[i], df.Recording_ID[i])
+print('{0} -> {1} selected.'.format(audio_format, image_format))
+print('Converting every file in {}'.format(path))
+
+for i in tqdm(range(len(df))):
+    audio_file = '{0}-{1}-{2}.{3}'.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i], audio_format)
+    target = '{0}\\{1}'.format(path, audio_file)
+    output = '{0}\\{1}\\{2}.png'.format(mel_path, df.English_name[i], df.Recording_ID[i])
     if os.path.exists(output):
         continue
     try:
         y, sr = librosa.load(target)
     except FileNotFoundError:
-        print("not found", target, output)
         continue
 
     mel_s = librosa.feature.melspectrogram(y, sr)
@@ -45,14 +41,11 @@ for i, path in tqdm(enumerate(os.listdir(file_path))):
 
     plt.tight_layout()
     try:
-        plt.savefig(output)
-    except PermissionError:
-        plt.savefig(output)
-        continue
+        plt.savefig(output, format=image_format)
     except FileNotFoundError:
-        os.makedirs(output)
-        plt.savefig(output)
+        os.makedirs('{0}\\{1}'.format(mel_path, df.English_name[i]))
+        plt.savefig(output, format=image_format)
     
     del y, sr, mel_s, mel_spectrogram, mel_img
 
-print('.{} to Mel-Spectrogram conversion completed.'.format(ogg_or_wav))
+print('.{0} -> {1} conversion completed.'.format(audio_format, image_format))
