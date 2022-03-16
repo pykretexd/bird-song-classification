@@ -6,11 +6,9 @@ import os
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-# Path variables
 mel_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'mel'))
 df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'metadata.csv')))
 
-# User input
 audio_format = input('Specify the desired AUDIO format: ')
 if audio_format == 'mp3' and os.path.exists(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'new_mp3'))):
     mp3_check = input('Do you want to use the modified mp3 files in "audio/new_mp3"? (y/n): ')
@@ -18,7 +16,6 @@ audio_format = audio_format.lower()
 image_format = input('Specify the desired IMAGE format (eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff): ')
 image_format = image_format.lower()
 
-# Check which mp3 folder to use
 if mp3_check == 'y':
     path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'new_mp3'))
 else:
@@ -27,7 +24,6 @@ else:
 print('{0} -> {1} selected.'.format(audio_format, image_format))
 print('Converting every file in {}'.format(path))
 
-# Begin for loop
 for i in tqdm(range(len(df))):
     audio_file = '{0}-{1}-{2}.{3}'.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i], audio_format)
     target = '{0}\\{1}'.format(path, audio_file)
