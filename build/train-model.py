@@ -1,48 +1,74 @@
-import tensorflow as tf
+from sre_parse import CATEGORIES
 import pandas as pd
+import numpy as np
+import os
+import cv2
+import random
+import tensorflow as tf
 import keras
-from keras import layers
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
+from tqdm import tqdm
 
-directory = 'images/mel'
-csv = pd.read_csv('audio/metadata.csv')
-csv = csv.astype({'Genus': 'float32', 'Specific_epithet': 'float32', 'English_name': 'float32', 'Vocalization_type': 'float32'})
+df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), 'audio', 'metadata.csv')))
+df = df.drop_duplicates(subset='English_name', keep='first')
 
-batch_size = 32
-epochs = 10
+CATEGORIES = df['English_name'].values
+CATEGORIES = CATEGORIES.tolist()
+DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), 'images', 'mel'))
+IMG_SIZE = 480
 
-file_path = []
-for value in csv['Recording_ID'].values:
-    file_path.append(str(value) + '.png')
+training_data = []
 
-label = csv['English_name'].values
-ds_train = tf.data.Dataset.from_tensor_slices((file_path, label))
-# train_ds = tf.keras.preprocessing.image_dataset_from_directory(dataset_path, labels=None, image_size=(640, 480), validation_split=0.1, subset='training')
-# val_ds = tf.keras.preprocessing.image_dataset_from_directory(dataset_path, labels=None, image_size=(640, 480), validation_split=0.1, subset='validation')
+def create_training_data():
+    for category in CATEGORIES:
+        path = os.path.join(DATADIR,category)
+        class_num = CATEGORIES.index(category)
+        try:
+            for img in tqdm(os.listdir(path)):
+                try:
+                    img_array = cv2.imread(os.path.join(path, img))
+                    new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
+                    training_data.append([new_array, class_num])
+                except:
+                    pass
+        except FileNotFoundError:
+            CATEGORIES.remove(category)
 
-def read_image(image_file, label):
-    image = tf.io.read_file(directory + image_file)
-    image = tf.image.decode_image(image, channels=1, dtype=tf.float32)
-    return image, label
+create_training_data()
+random.shuffle(training_data)
+X = []
+y = []
 
-def augment(image, label):
-    # data augmentation here
-    return image, label
+for features,label in training_data:
+    X.append(features)
+    y.append(label)
 
-ds_train = ds_train.map(read_image).map(augment).batch(2)
+print(X[0].reshape(-1, IMG_SIZE, IMG_SIZE, 1))
 
-model = keras.Sequential([
-    layers.Input(shape=(640, 480, 3), batch_size=batch_size),
-    layers.Conv2D(24, 5, padding='valid', activation='relu', name='L1'), # Remove padding
-    layers.Conv2D(36, 4, padding='valid', activation='relu', name='L2'),
-    layers.Conv2D(48, 3, padding='valid', activation='relu', name='L3'),
-    layers.Dense(60, activation='relu', name='L4'),
-    layers.Dense(50, activation='softmax', name='L5'), # Output units are the amount of categories used.
-])
+X = np.array(X).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
 
-model.compile(
-    optimizer='adam',
-    loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True)],
-    metrics=["accuracy"]
-)
+X = X/255.0
 
-model.fit(ds_train, epochs=epochs)
+model = Sequential()
+
+model.add(Conv2D(256, (3, 3), input_shape=X.shape[1:]))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(256, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Flatten())
+
+model.add(Dense(64))
+
+model.add(Dense(1))
+model.add(Activation('sigmoid'))
+
+model.compile(loss='category_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+model.fit(X, y, batch_size=32, epochs=3, validation_split=0.1)
