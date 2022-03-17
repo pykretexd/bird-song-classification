@@ -8,7 +8,6 @@ import tensorflow as tf
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
-from tqdm import tqdm
 
 df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), 'audio', 'metadata.csv')))
 df = df.drop_duplicates(subset='English_name', keep='first')
@@ -25,7 +24,7 @@ def create_training_data():
         path = os.path.join(DATADIR,category)
         class_num = CATEGORIES.index(category)
         try:
-            for img in tqdm(os.listdir(path)):
+            for img in os.listdir(path):
                 try:
                     img_array = cv2.imread(os.path.join(path, img))
                     new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))
@@ -43,8 +42,6 @@ y = []
 for features,label in training_data:
     X.append(features)
     y.append(label)
-
-print(X[0].reshape(-1, IMG_SIZE, IMG_SIZE, 1))
 
 X = np.array(X).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
 
