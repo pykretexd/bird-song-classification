@@ -22,14 +22,14 @@ ds_train = tf.data.Dataset.from_tensor_slices((X, y))
 
 def read_image(image_file, label):
     image = tf.io.read_file(directory + image_file)
-    image = tf.image.decode_image(image, channels=3, dtype=tf.float32)
+    image = tf.image.decode_image(image, channels=1, dtype=tf.float32)
     return image, label
 
 ds_train = ds_train.map(read_image).batch(2)
 
 model = keras.Sequential(
     [
-        layers.Input((640, 480, 3)),
+        layers.Input(160, 120, 1),
         layers.Conv2D(24, (5,5), activation='relu'),
         layers.Conv2D(36, (4,4), activation='relu'),
         layers.Conv2D(48, (3,3), activation='relu', padding='valid'),
@@ -45,4 +45,4 @@ model.compile(
     metrics=["accuracy"],
 )
 
-model.fit(ds_train, epochs=1)
+model.fit(ds_train, epochs=1, batch_size=32, validation_split=0.1)
