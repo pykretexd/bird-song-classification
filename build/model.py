@@ -31,14 +31,19 @@ ds_train = tf.data.Dataset.from_tensor_slices((X, y))
 
 def read_image(image_file, label):
     image = tf.io.read_file(directory + image_file)
-    image = tf.image.decode_image(image, channels=1, dtype=tf.float32)
+    image = tf.image.decode_image(image, channels=3, dtype=tf.float32, expand_animations=False)
     return image, label
 
-ds_train = ds_train.map(read_image).batch(2)
+def augment(image, label):
+    image = tf.image.central_crop(image, 0.95)
+    image = tf.image.resize(image, (128, 128))
+    return image, label
+
+ds_train = ds_train.map(read_image).map(augment).batch(2)
 
 model = keras.Sequential(
     [
-        layers.Input((862, 128, 1)),
+        layers.Input((128, 128, 3)),
 
         layers.Conv2D(24, (5,5), activation='relu'),
         layers.MaxPooling2D(strides=(3,3)),
@@ -53,7 +58,7 @@ model = keras.Sequential(
         layers.Dense(60, activation='relu'),
         layers.Dropout(.5),
 
-        layers.Dense(12, activation='softmax')
+        layers.Dense(len(np.unique(labels)), activation='softmax')
     ]
 )
 
@@ -63,4 +68,4 @@ model.compile(
     metrics=["accuracy"],
 )
 
-model.fit(ds_train, epochs=100, batch_size=32, callbacks=[tensorboard])
+model.fit(ds_train, epochs=200, batch_size=32, callbacks=[tensorboard])
