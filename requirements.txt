@@ -2,6 +2,7 @@ pydub
 pandas
 librosa
 tqdm
-matplotlib
+scikit-image
 numpy
 tensorflow
+opencv-python
