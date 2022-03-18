@@ -27,7 +27,7 @@ print('{0} -> {1} selected.'.format(audio_format, image_format))
 print('Converting every file in {}'.format(path))
 
 row_list = []
-for i in tqdm(range(100)):
+for i in tqdm(range(len(df))):
     row_list.append(dict(file_name='{0}.{1}'.format(df.Recording_ID[i], image_format), english_name=df.English_name[i]))
     audio_file = '{0}-{1}-{2}.{3}'.format(df.Genus[i], df.Specific_epithet[i], df.Recording_ID[i], audio_format)
     target = '{0}\\{1}'.format(path, audio_file)
