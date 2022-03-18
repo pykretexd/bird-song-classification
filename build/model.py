@@ -29,13 +29,14 @@ ds_train = ds_train.map(read_image).batch(2)
 
 model = keras.Sequential(
     [
-        layers.Input(160, 120, 1),
+        layers.Input((160, 120, 1)),
         layers.Conv2D(24, (5,5), activation='relu'),
         layers.Conv2D(36, (4,4), activation='relu'),
         layers.Conv2D(48, (3,3), activation='relu', padding='valid'),
         layers.Flatten(),
         layers.Dense(60, activation='relu'),
-        layers.Dense(len(np.unique(labels)))
+        layers.Dropout(0.5),
+        layers.Dense(len(np.unique(labels)), activation='softmax')
     ]
 )
 
@@ -45,4 +46,4 @@ model.compile(
     metrics=["accuracy"],
 )
 
-model.fit(ds_train, epochs=1, batch_size=32, validation_split=0.1)
+model.fit(ds_train, epochs=3)
