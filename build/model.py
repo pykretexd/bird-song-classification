@@ -1,22 +1,31 @@
+from sklearn import preprocessing
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
+from keras.callbacks import TensorBoard
 import os
 import numpy as np
-import cv2
 import pandas as pd
+import random
+import time
+import warnings
+warnings.filterwarnings("ignore")
 
+log_name = 'Bird-cnn-{}'.format(int(time.time()))
+tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
 directory = '{}\\'.format(os.path.realpath(os.path.join(os.path.dirname(__file__), 'images', 'mel')))
 df = pd.read_csv(directory + '\\train.csv')
 
 X = df["file_name"].values
-labels = df["english_name"].values
+random.shuffle(X)
 
+labels = df["english_name"].values
 y = []
 for category in labels:
     class_num = labels.tolist().index(category)
     y.append(class_num)
 y = np.array(y)
+y = np.divide(y, 43)
 
 ds_train = tf.data.Dataset.from_tensor_slices((X, y))
 
@@ -29,21 +38,29 @@ ds_train = ds_train.map(read_image).batch(2)
 
 model = keras.Sequential(
     [
-        layers.Input((160, 120, 1)),
+        layers.Input((862, 128, 1)),
+
         layers.Conv2D(24, (5,5), activation='relu'),
-        layers.Conv2D(36, (4,4), activation='relu'),
+        layers.MaxPooling2D(strides=(3,3)),
+
+        layers.Conv2D(36, (4,4), activation='relu', padding='valid'),
+        layers.MaxPooling2D(strides=(2,2)),
+
         layers.Conv2D(48, (3,3), activation='relu', padding='valid'),
+
         layers.Flatten(),
+
         layers.Dense(60, activation='relu'),
-        layers.Dropout(0.5),
-        layers.Dense(len(np.unique(labels)), activation='softmax')
+        layers.Dropout(.5),
+
+        layers.Dense(12, activation='softmax')
     ]
 )
 
 model.compile(
-    optimizer=keras.optimizers.Adam(),
+    optimizer=keras.optimizers.Adam(learning_rate=0.00001),
     loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
     metrics=["accuracy"],
 )
 
-model.fit(ds_train, epochs=3)
+model.fit(ds_train, epochs=100, batch_size=32, callbacks=[tensorboard])
