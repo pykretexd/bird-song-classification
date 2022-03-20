@@ -11,10 +11,11 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 
-log_name = 'Bird-cnn-{}'.format(int(time.time()))
+log_name = 'Bird-cnn-200x200-{}'.format(int(time.time()))
 tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
 directory = '{}\\'.format(os.path.realpath(os.path.join(os.path.dirname(__file__), 'images', 'mel')))
-df = pd.read_csv(directory + '\\train.csv')
+
+df = pd.read_csv(directory + 'train.csv')
 
 X = df["file_name"].values
 random.shuffle(X)
@@ -26,6 +27,7 @@ for category in labels:
     y.append(class_num)
 y = np.array(y)
 y = np.divide(y, 43)
+print(y.shape)
 
 ds_train = tf.data.Dataset.from_tensor_slices((X, y))
 
@@ -36,14 +38,14 @@ def read_image(image_file, label):
 
 def augment(image, label):
     image = tf.image.central_crop(image, 0.95)
-    image = tf.image.resize(image, (128, 128))
+    image = tf.image.resize(image, (200, 200))
     return image, label
 
 ds_train = ds_train.map(read_image).map(augment).batch(2)
 
 model = keras.Sequential(
     [
-        layers.Input((128, 128, 3)),
+        layers.Input((200, 200, 3)),
 
         layers.Conv2D(24, (5,5), activation='relu'),
         layers.MaxPooling2D(strides=(3,3)),
@@ -63,9 +65,10 @@ model = keras.Sequential(
 )
 
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=0.00001),
+    optimizer=keras.optimizers.RMSprop(learning_rate=0.00001),
     loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
     metrics=["accuracy"],
 )
 
-model.fit(ds_train, epochs=200, batch_size=32, callbacks=[tensorboard])
+model.fit(ds_train, epochs=100, batch_size=32, callbacks=[tensorboard])
+model.evaluate(ds_train, batch_size=32)
