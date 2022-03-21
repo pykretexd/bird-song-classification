@@ -20,6 +20,11 @@ df3 = df3['Recording_ID'] = 'XC' + df3['Recording_ID'].astype(str) + '.mp3'
 df = pd.concat([df1, df2, df3], ignore_index=True)
 df = filter_rows_by_values(df, 'country', ['Japan', 'El Salvador', 'Guatemala', 'Chile', 'Peru', 'United States', 'Canada', 'Colombia', 'Costa Rica', 'Mexico', 'Honduras', 'Puerto Rico', 'Cuba', 'Panama', 'Ecuador', 'Algeria', 'Argentina', 'Australia', 'Azerbaijan', 'Bahamas', 'Barbados', 'Belize', 'Bhutan', 'Bolivia', 'Brazil', 'Burundi', 'Vietnam', 'Venezuela', 'Uzbekistan', 'Uruguay'])
 
-print(df.head())
+path = os.path.realpath(os.path.join(os.path.dirname(__file__)))
+for row in df['filename'].values:
+    if row not in os.listdir(path):
+        df.drop(df[df.filename == row].index, inplace=True)
+        print('Removed ' + row)
+print(df)
 
-df.to_csv(directory + 'train.csv', index=False)
+df.to_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..')) + 'train.csv', index=False)
