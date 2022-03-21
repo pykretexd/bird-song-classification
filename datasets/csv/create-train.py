@@ -1,8 +1,6 @@
 import pandas as pd
 import os
 
-from pyparsing import col
-
 def filter_rows_by_values(df, col, values):
     return df[~df[col].isin(values)]
 
