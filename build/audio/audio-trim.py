@@ -28,8 +28,8 @@ for filename in tqdm(os.listdir(mp3_path)):
     if ext == '.mp3':
         mp3 = AudioSegment.from_mp3(mp3_path + '\\' + filename)
         if time > 0:
-           mp3[0:time].export('{0}/{1}.mp3'.format(path, name), format='mp3')
+           mp3[0:time].export('{}/{}.mp3'.format(path, name), format='mp3')
         else:
-            mp3.export('{0}/{1}.{2}'.format(path, name, format), format=format)
+            mp3.export('{}/{}.mp3'.format(path, name), format='mp3')
 
 print('Finished trimming.')
