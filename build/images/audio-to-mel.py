@@ -8,16 +8,17 @@ from tqdm import tqdm
 import warnings
 warnings.filterwarnings("ignore")
 
-import_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'audio', 'new_mp3'))
-export_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'image'))
-df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), '..', '..', 'dataset', 'train.csv')))
+import_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'audio'))
+export_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 'image'))
+df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), 'audio', 'audio.csv')))
 
-row_list = []
+list = []
 for i in tqdm(range(len(df))):
-    row_list.append(dict(filename='{}.jpg'.format(df.filename[i]), english_name=df.english_name[i]))
-    target = '{}\\{}'.format(import_path, df.filename[i])
-    output = '{}\\{}.jpg'.format(export_path, df.filename[i])
-    if os.path.exists(output):
+    name, ext = os.path.splitext(df.file_name[i])
+    image = name + '.jpg'
+    list.append(dict(file_name=image, label=df.label[i]))
+    target = '{}\\{}'.format(import_path, df.file_name[i])
+    if os.path.exists('{}\\{}'.format(export_path, image)):
         continue
     try:
         y, sr = librosa.load(target)
@@ -27,9 +28,9 @@ for i in tqdm(range(len(df))):
     mel_s = librosa.power_to_db(librosa.feature.melspectrogram(y=y, sr=sr), ref=np.max)
     mel_img = librosa.display.specshow(mel_s)
     plt.tight_layout()
-    plt.savefig(output, format='jpg', dpi=50)
+    plt.savefig('{}\\{}'.format(export_path, image), format='jpg')
 
     del y, sr, mel_s, mel_img
 
-new_df = pd.DataFrame(row_list, columns=['file_name', 'english_name'])
+new_df = pd.DataFrame(list)
 new_df.to_csv('{}\\train.csv'.format(export_path), index=False)
