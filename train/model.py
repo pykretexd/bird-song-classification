@@ -18,7 +18,6 @@ directory = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data
 df = pd.read_csv(directory + 'train.csv')
 
 X = df["file_name"].values
-random.shuffle(X)
 
 labels = df["label"].values
 y = []
@@ -26,7 +25,7 @@ for category in labels:
     class_num = labels.tolist().index(category)
     y.append(class_num)
 y = np.array(y)
-y = np.divide(y, 65) # Divide by number per label
+y = np.divide(y, 65)
 print(y.shape)
 
 ds_train = tf.data.Dataset.from_tensor_slices((X, y))
@@ -65,10 +64,12 @@ model = keras.Sequential(
 )
 
 model.compile(
-    optimizer=keras.optimizers.RMSprop(learning_rate=0.00001),
+    optimizer=keras.optimizers.Adam(learning_rate=0.00001),
     loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
     metrics=["accuracy"],
 )
 
 model.fit(ds_train, epochs=100, batch_size=32, callbacks=[tensorboard])
-model.evaluate(ds_train, batch_size=32)
+results = model.evaluate(ds_train, batch_size=32)
+print('test loss, test acc: ' + results)
+model.save('saved_models/Bird-cnn-200x200-{}'.format(int(time.time())))
