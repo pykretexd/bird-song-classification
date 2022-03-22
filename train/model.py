@@ -11,40 +11,46 @@ import time
 import warnings
 warnings.filterwarnings("ignore")
 
-log_name = 'Bird-cnn-200x200-{}'.format(int(time.time()))
+log_name = 'Bird-cnn-200x3-{}'.format(int(time.time()))
 tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
-directory = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image')) + '\\'
 
-df = pd.read_csv(directory + 'train.csv')
+directory = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image'))
 
-X = df["file_name"].values
+categories = next(os.walk(directory, '.'))[1]
+print(categories)
+image_size = 200
 
-labels = df["label"].values
+training_data = []
+def create_training_data():
+    for category in categories:
+        path = os.path.join(directory, category)
+        class_num = categories.index(category)
+        for image in os.listdir(path):
+            try:
+                image_array = tf.io.read_file(path + '\\' + image)
+                image_array = tf.image.decode_image(image_array, channels=3, dtype=tf.float32, expand_animations=False)
+                image_array = tf.image.central_crop(image_array, 0.95)
+                image_array = tf.image.resize(image_array, (image_size, image_size))
+                training_data.append([image_array, class_num])
+            except:
+                pass
+
+create_training_data()
+random.shuffle(training_data)
+
+X = []
 y = []
-for category in labels:
-    class_num = labels.tolist().index(category)
-    y.append(class_num)
+for features, label in training_data:
+    X.append(features)
+    y.append(label)
+
+X = np.array(X).reshape(-1, image_size, image_size, 3)
+X = X / 255.0
 y = np.array(y)
-y = np.divide(y, 65)
-print(y.shape)
-
-ds_train = tf.data.Dataset.from_tensor_slices((X, y))
-
-def read_image(image_file, label):
-    image = tf.io.read_file(directory + image_file)
-    image = tf.image.decode_image(image, channels=3, dtype=tf.float32, expand_animations=False)
-    return image, label
-
-def augment(image, label):
-    image = tf.image.central_crop(image, 0.95)
-    image = tf.image.resize(image, (200, 200))
-    return image, label
-
-ds_train = ds_train.map(read_image).map(augment).batch(2)
 
 model = keras.Sequential(
     [
-        layers.Input((200, 200, 3)),
+        layers.Input((image_size, image_size, 3)),
 
         layers.Conv2D(24, (5,5), activation='relu'),
         layers.MaxPooling2D(strides=(3,3)),
@@ -59,17 +65,16 @@ model = keras.Sequential(
         layers.Dense(60, activation='relu'),
         layers.Dropout(.5),
 
-        layers.Dense(len(np.unique(labels)), activation='softmax')
+        layers.Dense(3, activation='softmax')
     ]
 )
 
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=0.00001),
+    optimizer=keras.optimizers.Adam(learning_rate=0.0001),
     loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
     metrics=["accuracy"],
 )
 
-model.fit(ds_train, epochs=100, batch_size=32, callbacks=[tensorboard])
-results = model.evaluate(ds_train, batch_size=32)
+model.fit(X, y, epochs=100, batch_size=5, callbacks=[tensorboard])
+results = model.evaluate(X, y, batch_size=5)
 print('test loss, test acc: ' + results)
-model.save('saved_models/Bird-cnn-200x200-{}'.format(int(time.time())))
