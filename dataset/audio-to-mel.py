@@ -14,12 +14,17 @@ df = pd.read_csv(os.path.realpath(os.path.join(os.path.dirname(__file__), 'audio
 
 list = []
 for i in tqdm(range(len(df))):
+    target = '{}\\{}'.format(import_path, df.file_name[i])
+
+    folder = df.label[i]
+    if not os.path.exists('{}\\{}'.format(export_path, folder)):
+        os.mkdir('{}\\{}'.format(export_path, folder))
+    
     name, ext = os.path.splitext(df.file_name[i])
     image = name + '.jpg'
-    list.append(dict(file_name=image, label=df.label[i]))
-    target = '{}\\{}'.format(import_path, df.file_name[i])
-    if os.path.exists('{}\\{}'.format(export_path, image)):
+    if os.path.exists('{}\\{}\\{}'.format(export_path, folder, image)):
         continue
+
     try:
         y, sr = librosa.load(target)
     except:
@@ -27,10 +32,8 @@ for i in tqdm(range(len(df))):
 
     mel_s = librosa.power_to_db(librosa.feature.melspectrogram(y=y, sr=sr), ref=np.max)
     mel_img = librosa.display.specshow(mel_s)
+
     plt.tight_layout()
-    plt.savefig('{}\\{}'.format(export_path, image), format='jpg')
+    plt.savefig('{}\\{}\\{}'.format(export_path, folder, image), format='jpg')
 
     del y, sr, mel_s, mel_img
-
-new_df = pd.DataFrame(list)
-new_df.to_csv('{}\\train.csv'.format(export_path), index=False)
