@@ -13,20 +13,20 @@ warnings.filterwarnings("ignore")
 
 log_name = 'Bird-cnn-200x200-{}'.format(int(time.time()))
 tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
-directory = '{}\\'.format(os.path.realpath(os.path.join(os.path.dirname(__file__), 'images', 'mel')))
+directory = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image')) + '\\'
 
 df = pd.read_csv(directory + 'train.csv')
 
 X = df["file_name"].values
 random.shuffle(X)
 
-labels = df["english_name"].values
+labels = df["label"].values
 y = []
 for category in labels:
     class_num = labels.tolist().index(category)
     y.append(class_num)
 y = np.array(y)
-y = np.divide(y, 43)
+y = np.divide(y, 65) # Divide by number per label
 print(y.shape)
 
 ds_train = tf.data.Dataset.from_tensor_slices((X, y))
