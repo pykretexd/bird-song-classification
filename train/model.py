@@ -52,20 +52,24 @@ model = keras.Sequential(
     [
         layers.Input((image_size, image_size, 3)),
 
-        layers.Conv2D(24, (5,5), activation='relu'),
-        layers.MaxPooling2D(strides=(3,3)),
+        layers.Conv2D(32, (3,3), activation='relu', kernel_regularizer=regularizers.l2(l=0.01)),
+        layers.MaxPooling2D((2,2)),
+        layers.Dropout(0.2),
 
-        layers.Conv2D(36, (4,4), activation='relu', padding='valid'),
-        layers.MaxPooling2D(strides=(2,2)),
+        layers.Conv2D(64, (3,3), activation='relu', padding='valid', kernel_regularizer=regularizers.l2(l=0.01)),
+        layers.MaxPooling2D((2,2)),
+        layers.Dropout(0.2),
 
-        layers.Conv2D(48, (3,3), activation='relu', padding='valid'),
+        layers.Conv2D(64, (3,3), activation='relu', padding='valid', kernel_regularizer=regularizers.l2(l=0.01)),
 
         layers.Flatten(),
 
-        layers.Dense(60, activation='relu'),
-        layers.Dropout(.5),
+        layers.Dense(64, activation='relu'),
+        layers.Dropout(.2),
 
-        layers.Dense(3, activation='softmax')
+        layers.Dense(32, activation='relu'),
+
+        layers.Dense(len(np.unique(y)), activation='softmax')
     ]
 )
 
