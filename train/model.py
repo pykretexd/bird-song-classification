@@ -1,24 +1,19 @@
-from sklearn import preprocessing
 import tensorflow as tf
 from tensorflow import keras
-from keras import layers
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
+from sklearn.model_selection import train_test_split
 import os
 import numpy as np
-import pandas as pd
 import random
 import time
 import warnings
 warnings.filterwarnings("ignore")
 
-log_name = 'Bird-cnn-200x3-{}'.format(int(time.time()))
-tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
-
 directory = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image'))
-
 categories = next(os.walk(directory, '.'))[1]
-print(categories)
-image_size = 200
+image_size = 256
 
 training_data = []
 def create_training_data():
@@ -28,7 +23,7 @@ def create_training_data():
         for image in os.listdir(path):
             try:
                 image_array = tf.io.read_file(path + '\\' + image)
-                image_array = tf.image.decode_image(image_array, channels=3, dtype=tf.float32, expand_animations=False)
+                image_array = tf.image.decode_image(image_array, channels=1, dtype=tf.float32, expand_animations=False)
                 image_array = tf.image.central_crop(image_array, 0.95)
                 image_array = tf.image.resize(image_array, (image_size, image_size))
                 training_data.append([image_array, class_num])
@@ -44,41 +39,34 @@ for features, label in training_data:
     X.append(features)
     y.append(label)
 
-X = np.array(X).reshape(-1, image_size, image_size, 3)
+X = np.array(X).reshape(-1, image_size, image_size, 1)
 X = X / 255.0
 y = np.array(y)
 
-model = keras.Sequential(
-    [
-        layers.Input((image_size, image_size, 3)),
+model = Sequential()
 
-        layers.Conv2D(32, (3,3), activation='relu', kernel_regularizer=regularizers.l2(l=0.01)),
-        layers.MaxPooling2D((2,2)),
-        layers.Dropout(0.2),
+model.add(Conv2D(64, (3,3), input_shape=X.shape[1:]))
+model.add(Activation('relu'))
+model.add(MaxPooling2D((2,2)))
 
-        layers.Conv2D(64, (3,3), activation='relu', padding='valid', kernel_regularizer=regularizers.l2(l=0.01)),
-        layers.MaxPooling2D((2,2)),
-        layers.Dropout(0.2),
+model.add(Conv2D(64, (3,3), input_shape=X.shape[1:]))
+model.add(Activation('relu'))
+model.add(MaxPooling2D((2,2)))
 
-        layers.Conv2D(64, (3,3), activation='relu', padding='valid', kernel_regularizer=regularizers.l2(l=0.01)),
+model.add(Flatten())
+model.add(Dense(64))
 
-        layers.Flatten(),
-
-        layers.Dense(64, activation='relu'),
-        layers.Dropout(.2),
-
-        layers.Dense(32, activation='relu'),
-
-        layers.Dense(len(np.unique(y)), activation='softmax')
-    ]
-)
+model.add(Dense(len(np.unique(y))))
+model.add(Activation('sigmoid'))
 
 model.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=0.0001),
-    loss=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),],
+    optimizer=keras.optimizers.Adam(),
+    loss=[keras.losses.BinaryCrossentropy(from_logits=False)],
     metrics=["accuracy"],
 )
 
-model.fit(X, y, epochs=100, batch_size=5, callbacks=[tensorboard])
-results = model.evaluate(X, y, batch_size=5)
-print('test loss, test acc: ' + results)
+# log_name = 'BirdSpecies-{}x{}-{}'.format(image_size, len(np.unique(y)), int(time.time()))
+# tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
+
+model.fit(X, y, epochs=10, batch_size=8, validation_split=0.1)
+model.evaluate(X, y, batch_size=2)
