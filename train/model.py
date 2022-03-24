@@ -62,7 +62,7 @@ model.add(Dense(60))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
 
-model.add(Dense(1))
+model.add(Dense(len(np.unique(y))
 model.add(Activation('softmax'))
 
 model.compile(
@@ -76,4 +76,4 @@ tensorboard = TensorBoard(log_dir='build/logs/{}'.format(name))
 
 model.fit(X, y, epochs=100, batch_size=32, validation_split=0.1, callbacks=[tensorboard])
 model.evaluate(X, y, batch_size=32)
-model.save('train/saved-models/{}'.format(name))
+model.save('saved-models/{}'.format(name))
