@@ -14,10 +14,6 @@ for folder in next(os.walk(path, '.'))[1]:
     folder_path = path + '\\' + folder
     for file in tqdm(os.listdir(folder_path)):
         file_path = '{}\\{}'.format(folder_path, file)
-        if os.path.exists('{}\\{}'.format(path, file)):
-            os.rename('{}\\{}'.format(path, file), '{}\\1-{}'.format(path, file))
-            list.append(dict(file_name='1-{}'.format(file), label=folder))
-        
         mp3 = AudioSegment.from_mp3(file_path)
         number_of_exports = round(mp3.duration_seconds) // (time // 1000)
         i = 1
