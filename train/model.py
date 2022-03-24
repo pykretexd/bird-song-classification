@@ -1,5 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
+from keras import regularizers
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
@@ -45,28 +46,34 @@ y = np.array(y)
 
 model = Sequential()
 
-model.add(Conv2D(64, (3,3), input_shape=X.shape[1:]))
+model.add(Conv2D(24, (5,5), input_shape=X.shape[1:], kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('relu'))
-model.add(MaxPooling2D((2,2)))
+model.add(MaxPooling2D(strides=(3,3)))
 
-model.add(Conv2D(64, (3,3), input_shape=X.shape[1:]))
+model.add(Conv2D(36, (4,4), padding='valid', kernel_regularizer=regularizers.l2(0.001)))
 model.add(Activation('relu'))
-model.add(MaxPooling2D((2,2)))
+model.add(MaxPooling2D(strides=(2,2)))
+
+model.add(Conv2D(48, (3,3), padding='valid'))
+model.add(Activation('relu'))
 
 model.add(Flatten())
-model.add(Dense(64))
+model.add(Dense(60))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
 
-model.add(Dense(len(np.unique(y))))
+model.add(Dense(1))
 model.add(Activation('sigmoid'))
 
 model.compile(
-    optimizer=keras.optimizers.Adam(),
+    optimizer=keras.optimizers.Adam(lr=0.0001),
     loss=[keras.losses.BinaryCrossentropy(from_logits=False)],
     metrics=["accuracy"],
 )
 
-# log_name = 'BirdSpecies-{}x{}-{}'.format(image_size, len(np.unique(y)), int(time.time()))
-# tensorboard = TensorBoard(log_dir='build/logs/{}'.format(log_name))
+name = 'BirdSpecies-{}x{}-{}'.format(image_size, len(np.unique(y)), int(time.time()))
+tensorboard = TensorBoard(log_dir='build/logs/{}'.format(name))
 
-model.fit(X, y, epochs=10, batch_size=8, validation_split=0.1)
-model.evaluate(X, y, batch_size=2)
+model.fit(X, y, epochs=100, batch_size=32, validation_split=0.1, callbacks=[tensorboard])
+model.evaluate(X, y, batch_size=32)
+model.save('train/saved-models/{}'.format(name))
