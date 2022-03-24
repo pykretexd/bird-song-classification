@@ -63,11 +63,11 @@ model.add(Activation('relu'))
 model.add(Dropout(0.5))
 
 model.add(Dense(1))
-model.add(Activation('sigmoid'))
+model.add(Activation('softmax'))
 
 model.compile(
     optimizer=keras.optimizers.Adam(lr=0.0001),
-    loss=[keras.losses.BinaryCrossentropy(from_logits=False)],
+    loss=[keras.losses.CategoricalCrossentropy(from_logits=False)],
     metrics=["accuracy"],
 )
 
