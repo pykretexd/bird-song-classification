@@ -4,13 +4,13 @@ from keras import regularizers
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
 from keras.callbacks import TensorBoard
-from sklearn.model_selection import train_test_split
 import os
 import numpy as np
 import random
 import time
 import warnings
 warnings.filterwarnings("ignore")
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 directory = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'dataset', 'image'))
 categories = next(os.walk(directory, '.'))[1]
@@ -44,6 +44,9 @@ X = np.array(X).reshape(-1, image_size, image_size, 1)
 X = X / 255.0
 y = np.array(y)
 
+print(X)
+print(y)
+
 model = Sequential()
 
 model.add(Conv2D(24, (5,5), input_shape=X.shape[1:], kernel_regularizer=regularizers.l2(0.001)))
@@ -62,12 +65,12 @@ model.add(Dense(60))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
 
-model.add(Dense(len(np.unique(y))
+model.add(Dense(len(np.unique(y))))
 model.add(Activation('softmax'))
 
 model.compile(
     optimizer=keras.optimizers.Adam(lr=0.0001),
-    loss=[keras.losses.CategoricalCrossentropy(from_logits=False)],
+    loss=[keras.losses.BinaryCrossentropy(from_logits=True)],
     metrics=["accuracy"],
 )
 
@@ -76,4 +79,4 @@ tensorboard = TensorBoard(log_dir='build/logs/{}'.format(name))
 
 model.fit(X, y, epochs=100, batch_size=32, validation_split=0.1, callbacks=[tensorboard])
 model.evaluate(X, y, batch_size=32)
-model.save('saved-models/{}'.format(name))
+model.save('test/saved-models/{}'.format(name))
